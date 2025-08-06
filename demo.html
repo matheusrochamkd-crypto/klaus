@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klaus Calculator - Demo</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .calculator {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 300px;
+            width: 100%;
+        }
+        
+        .display {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: right;
+        }
+        
+        .display-value {
+            font-size: 2.5rem;
+            font-weight: 300;
+            color: white;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            gap: 10px;
+        }
+        
+        .btn {
+            height: 60px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-number {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+        
+        .btn-operation {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-clear {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+        }
+        
+        .btn-equals {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            grid-row: span 2;
+        }
+        
+        .btn-zero {
+            grid-column: span 2;
+        }
+        
+        .btn-plus {
+            grid-row: span 2;
+        }
+        
+        @media (max-width: 480px) {
+            .calculator {
+                max-width: 280px;
+                padding: 15px;
+            }
+            
+            .btn {
+                height: 50px;
+                font-size: 1rem;
+            }
+            
+            .display-value {
+                font-size: 2rem;
+            }
+        }
+        
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: white;
+            opacity: 0.8;
+        }
+        
+        .footer a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Klaus Calculator</h1>
+        <p>Microsserviço de Calculadora</p>
+    </div>
+    
+    <div id="root"></div>
+    
+    <div class="footer">
+        <p>Desenvolvido com ❤️ por <a href="https://github.com/matheusrochamkd-crypto" target="_blank">Matheus</a></p>
+        <p>Curitiba, Brasil 🇧🇷</p>
+    </div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        const Calculator = () => {
+            const [display, setDisplay] = useState('0');
+            const [previousValue, setPreviousValue] = useState(null);
+            const [operation, setOperation] = useState(null);
+            const [waitingForOperand, setWaitingForOperand] = useState(false);
+
+            const inputNumber = (num) => {
+                if (waitingForOperand) {
+                    setDisplay(String(num));
+                    setWaitingForOperand(false);
+                } else {
+                    setDisplay(display === '0' ? String(num) : display + num);
+                }
+            };
+
+            const inputDecimal = () => {
+                if (waitingForOperand) {
+                    setDisplay('0.');
+                    setWaitingForOperand(false);
+                } else if (display.indexOf('.') === -1) {
+                    setDisplay(display + '.');
+                }
+            };
+
+            const clear = () => {
+                setDisplay('0');
+                setPreviousValue(null);
+                setOperation(null);
+                setWaitingForOperand(false);
+            };
+
+            const performOperation = (nextOperation) => {
+                const inputValue = parseFloat(display);
+
+                if (previousValue === null) {
+                    setPreviousValue(inputValue);
+                } else if (operation) {
+                    const currentValue = previousValue || 0;
+                    const newValue = calculate(currentValue, inputValue, operation);
+
+                    setDisplay(String(newValue));
+                    setPreviousValue(newValue);
+                }
+
+                setWaitingForOperand(true);
+                setOperation(nextOperation);
+            };
+
+            const calculate = (firstValue, secondValue, operation) => {
+                switch (operation) {
+                    case '+':
+                        return firstValue + secondValue;
+                    case '-':
+                        return firstValue - secondValue;
+                    case '*':
+                        return firstValue * secondValue;
+                    case '/':
+                        return firstValue / secondValue;
+                    default:
+                        return secondValue;
+                }
+            };
+
+            const handleEquals = () => {
+                const inputValue = parseFloat(display);
+
+                if (previousValue !== null && operation) {
+                    const newValue = calculate(previousValue, inputValue, operation);
+                    setDisplay(String(newValue));
+                    setPreviousValue(null);
+                    setOperation(null);
+                    setWaitingForOperand(true);
+                }
+            };
+
+            return (
+                <div className="calculator">
+                    <div className="display">
+                        <div className="display-value">{display}</div>
+                    </div>
+                    <div className="buttons">
+                        <button className="btn btn-clear" onClick={clear}>C</button>
+                        <button className="btn btn-operation" onClick={() => performOperation('/')}>÷</button>
+                        <button className="btn btn-operation" onClick={() => performOperation('*')}>×</button>
+                        <button className="btn btn-operation" onClick={() => performOperation('-')}>-</button>
+                        
+                        <button className="btn btn-number" onClick={() => inputNumber(7)}>7</button>
+                        <button className="btn btn-number" onClick={() => inputNumber(8)}>8</button>
+                        <button className="btn btn-number" onClick={() => inputNumber(9)}>9</button>
+                        <button className="btn btn-operation btn-plus" onClick={() => performOperation('+')}>+</button>
+                        
+                        <button className="btn btn-number" onClick={() => inputNumber(4)}>4</button>
+                        <button className="btn btn-number" onClick={() => inputNumber(5)}>5</button>
+                        <button className="btn btn-number" onClick={() => inputNumber(6)}>6</button>
+                        
+                        <button className="btn btn-number" onClick={() => inputNumber(1)}>1</button>
+                        <button className="btn btn-number" onClick={() => inputNumber(2)}>2</button>
+                        <button className="btn btn-number" onClick={() => inputNumber(3)}>3</button>
+                        <button className="btn btn-equals" onClick={handleEquals}>=</button>
+                        
+                        <button className="btn btn-number btn-zero" onClick={() => inputNumber(0)}>0</button>
+                        <button className="btn btn-number" onClick={inputDecimal}>.</button>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<Calculator />, document.getElementById('root'));
+    </script>
+</body>
+</html>
